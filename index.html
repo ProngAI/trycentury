@@ -2676,7 +2676,7 @@ prints its `ok` line and the machine code size first; they are left out here.
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
 <script>
-const DOWNLOADS = {"windows": {"file": "century-windows-x64.zip", "size": 2828566, "sha256": "2e9a329f29b258703c07104c99740b2e2b8536c185d4d236166c2f1a3059a108"}, "macos": {"file": "century-macos-x64.tar.gz", "size": 2674498, "sha256": "3bffae684db383cb3e4964ccff593faa5cd2497521b2172873bb03057740236e"}, "linux": {"file": "century-linux-x64.tar.gz", "size": 3356515, "sha256": "9ba471df93827374f32c8aae0226b28cd8656cc5310fbb65336fd59207d5cdbd"}, "built": "10 Nov 2026"};
+const DOWNLOADS = {"windows": {"file": "century-windows-x64.zip", "size": 2828566, "sha256": "2e9a329f29b258703c07104c99740b2e2b8536c185d4d236166c2f1a3059a108"}, "macos": {"file": "century-macos-x64.tar.gz", "size": 2674476, "sha256": "c325755088b5f8f808d0707d733ab41e104d939f66388439d168b90ee24406a2"}, "linux": {"file": "century-linux-x64.tar.gz", "size": 3356493, "sha256": "2ad84294cbfdfd35028ebbc5015627038f10721428c368f3c991a4bcdf93e378"}, "built": "10 Nov 2026"};
 const STARTER = [{"name": "hello.cy", "text": "-- hello.cy: the sum of the squares 1..n\npub fn main(n: u32) -> u64\n    mut total = u64(0)\n    mut i = u32(1)\n    while i <= n do\n        total = total + u64(i * i)\n        i = i + u32(1)\n    end\n    return total\nend\n"}, {"name": "heavy.cy", "text": "-- heavy.cy: a loop that runs on every CPU thread\n-- try:  century heavy.cy --jit heavy --arg 4000000\n-- then: CY_THREADS=1 century heavy.cy --jit heavy --arg 4000000 --jit-time\npub fn heavy(n: u32) -> f64\n    mut a = array[f64](n)\n    cpu do\n        mut i = u32(0)\n        while i < n do\n            mut x = f64(i) * 0.000001\n            mut k = u32(0)\n            while k < u32(64) do\n                x = sqrt(x * x + 1.0)\n                k = k + u32(1)\n            end\n            a[i] = x\n            i = i + u32(1)\n        end\n    end\n    return a[n / u32(2)] + a[n - u32(1)]\nend\n"}, {"name": "sumsq.cy", "text": "-- sumsq.cy: a floating-point sum with an error budget\n-- try:  century sumsq.cy --jit sumsq --arg 1000000\npub fn sumsq(n: u32) -> f64\n    mut a = array[f64](n)\n    mut i = u32(0)\n    while i < n do\n        a[i] = f64(i) * 0.001\n        i = i + u32(1)\n    end\n    mut acc ~ 1e-6 = 0.0\n    mut j = u32(0)\n    while j < len(a) do\n        acc = acc + a[j] * a[j]\n        j = j + u32(1)\n    end\n    return acc\nend\n"}, {"name": "README.md", "text": "# Century starter programs\n\nPut these next to the `century` program you downloaded, then:\n\n    century hello.cy --jit main --arg 10        # 385\n    century heavy.cy --jit heavy --arg 4000000  # every CPU thread\n    century sumsq.cy --jit sumsq --arg 1000000  # a sum with an error budget\n\nOn macOS and Linux, type ./century instead of century.\n"}];
 
 const OS_INFO = {
@@ -2688,12 +2688,12 @@ const OS_INFO = {
   macos: {
     name: "macOS", title: "macOS",
     reqs: ["Intel Macs natively; Apple silicon (M1 to M4) through Rosetta 2", "macOS offers to install Rosetta the first time an x86-64 program starts", "If macOS blocks the download, allow it in System Settings, Privacy & Security"],
-    steps: "$ tar xzf century-macos-x64.tar.gz\n$ cd century-macos-x64\n$ ./century --device\n$ ./century hello.cy --jit main --arg 10\njit main = 385"
+    steps: "$ cd ~/Downloads\n$ tar xzf century-macos-x64.tar.gz\n$ cd century-macos-x64\n$ ./century --device\n$ ./century hello.cy --jit main --arg 10\njit main = 385"
   },
   linux: {
     name: "Linux", title: "Linux",
     reqs: ["x86-64", "glibc 2.38 or newer: Debian 13, Ubuntu 24.04 and later", "The same machine code as Windows and macOS, with every optimisation"],
-    steps: "$ tar xzf century-linux-x64.tar.gz\n$ cd century-linux-x64\n$ ./century --device\n$ ./century hello.cy --jit main --arg 10\njit main = 385"
+    steps: "$ cd ~/Downloads\n$ tar xzf century-linux-x64.tar.gz\n$ cd century-linux-x64\n$ ./century --device\n$ ./century hello.cy --jit main --arg 10\njit main = 385"
   }
 };
 
