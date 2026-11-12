@@ -751,11 +751,6 @@ end</pre>
       <div data-d-status></div>
       <div class="sha"><span class="lbl">SHA-256</span><div class="sharow"><code data-d-sha></code><button class="copy" type="button" data-copy>Copy</button></div></div>
       <div><span class="lbl">Next</span><pre data-d-steps></pre></div>
-      <div class="starter" data-d-starter hidden>
-        <p>You can save the three starter programs (hello, heavy and sumsq) from here, as a zip.</p>
-        <div><button class="btn plain" type="button" data-save-starter>Save century-starter.zip</button></div>
-        <p class="saymsg" data-d-saymsg aria-live="polite"></p>
-      </div>
       <div class="dlg-foot"><a href="#install" data-close-link>All downloads and requirements</a></div>
     </div>
   </div>
@@ -2879,7 +2874,6 @@ prints its `ok` line and the machine code size first; they are left out here.
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
 <script>
 const DOWNLOADS = {"windows": {"file": "century-windows-x64.zip", "size": 4199546, "sha256": "0bbff465e1a070b408f08eca738f9fe3234668abacad1e449f4b8abe426a2433", "built": "11 Nov 2026"}, "macos": {"file": "century-macos-x64.tar.gz", "size": 2728477, "sha256": "cf7e0344fb4a628250a50926309f76b88a57ec2b6ecf33d5653465397235c0c5", "built": "12 Nov 2026"}, "linux": {"file": "century-linux-x64.tar.gz", "size": 3356493, "sha256": "2ad84294cbfdfd35028ebbc5015627038f10721428c368f3c991a4bcdf93e378"}, "built": "10 Nov 2026"};
-const STARTER = [{"name": "hello.cy", "text": "-- hello.cy: the sum of the squares 1..n\npub fn main(n: u32) -> u64\n    mut total = u64(0)\n    mut i = u32(1)\n    while i <= n do\n        total = total + u64(i * i)\n        i = i + u32(1)\n    end\n    return total\nend\n"}, {"name": "heavy.cy", "text": "-- heavy.cy: a loop that runs on every CPU thread\n-- try:  century heavy.cy --jit heavy --arg 4000000\n-- then: CY_THREADS=1 century heavy.cy --jit heavy --arg 4000000 --jit-time\npub fn heavy(n: u32) -> f64\n    mut a = array[f64](n)\n    cpu do\n        mut i = u32(0)\n        while i < n do\n            mut x = f64(i) * 0.000001\n            mut k = u32(0)\n            while k < u32(64) do\n                x = sqrt(x * x + 1.0)\n                k = k + u32(1)\n            end\n            a[i] = x\n            i = i + u32(1)\n        end\n    end\n    return a[n / u32(2)] + a[n - u32(1)]\nend\n"}, {"name": "sumsq.cy", "text": "-- sumsq.cy: a floating-point sum with an error budget\n-- try:  century sumsq.cy --jit sumsq --arg 1000000\npub fn sumsq(n: u32) -> f64\n    mut a = array[f64](n)\n    mut i = u32(0)\n    while i < n do\n        a[i] = f64(i) * 0.001\n        i = i + u32(1)\n    end\n    mut acc ~ 1e-6 = 0.0\n    mut j = u32(0)\n    while j < len(a) do\n        acc = acc + a[j] * a[j]\n        j = j + u32(1)\n    end\n    return acc\nend\n"}, {"name": "README.md", "text": "# Century starter programs\n\nPut these next to the `century` program you downloaded, then:\n\n    century hello.cy --jit main --arg 10        # 385\n    century heavy.cy --jit heavy --arg 4000000  # every CPU thread\n    century sumsq.cy --jit sumsq --arg 1000000  # a sum with an error budget\n\nOn macOS and Linux, type ./century instead of century.\n"}];
 
 const OS_INFO = {
   windows: {
@@ -3009,11 +3003,6 @@ function renderInstall() {
 }
 
 /* ---------- downloads ---------- */
-const IN_PREVIEW = location.protocol !== "file:" && ((window.claude && typeof window.claude.use === "function") || /claude/i.test(location.hostname));
-let previewSaver = null;
-if (IN_PREVIEW && window.claude && typeof window.claude.use === "function") {
-  window.claude.use("downloads").then(ns => { previewSaver = ns; if (!$("#dlg").hidden) refreshStarter(); }).catch(() => {});
-}
 let lastFocus = null, dlgOS = MY_OS;
 
 function startRealDownload(os) {
@@ -3022,10 +3011,6 @@ function startRealDownload(os) {
   a.download = DOWNLOADS[os].file;
   document.body.appendChild(a); a.click(); a.remove();
 }
-function refreshStarter() {
-  const box = $("[data-d-starter]");
-  box.hidden = !(IN_PREVIEW && previewSaver);
-}
 function openDownload(os) {
   dlgOS = os || MY_OS;
   const d = DOWNLOADS[dlgOS], info = OS_INFO[dlgOS];
@@ -3033,17 +3018,10 @@ function openDownload(os) {
   $("[data-d-meta]").textContent = fmtSize(d.size) + " · Century for " + info.name + " · built " + (d.built || DOWNLOADS.built);
   $("[data-d-sha]").textContent = d.sha256;
   $("[data-d-steps]").textContent = info.steps; colourTerm($("[data-d-steps]"));
-  $("[data-d-saymsg]").textContent = "";
   const st = $("[data-d-status]");
-  if (IN_PREVIEW) {
-    $("#dlg-title").textContent = "Download Century for " + info.name;
-    st.innerHTML = '<div class="status info"><span class="ico">i</span><div>This online preview can\'t hand out the compiler itself. Open the site from its folder on your computer (<code>century-site/index.html</code>) and this button saves the real archive.</div></div>';
-  } else {
-    $("#dlg-title").textContent = "Downloading Century for " + info.name;
-    st.innerHTML = '<div class="status ok"><span class="ico">✓</span><div>Your browser is saving <b>' + esc(d.file) + '</b>. Check your Downloads folder.<div class="prog" aria-hidden="true"><i></i></div><div class="hint" style="margin-top:8px">Nothing happened? <a href="downloads/' + esc(d.file) + '" download>Download it directly</a>.</div></div></div>';
-    startRealDownload(dlgOS);
-  }
-  refreshStarter();
+  $("#dlg-title").textContent = "Downloading Century for " + info.name;
+  st.innerHTML = '<div class="status ok"><span class="ico">✓</span><div>Your browser is saving <b>' + esc(d.file) + '</b>. Check your Downloads folder.<div class="prog" aria-hidden="true"><i></i></div><div class="hint" style="margin-top:8px">Nothing happened? <a href="downloads/' + esc(d.file) + '" download>Download it directly</a>.</div></div></div>';
+  startRealDownload(dlgOS);
   lastFocus = document.activeElement;
   $("#dlg").hidden = false;
   $(".dlg").focus();
@@ -3066,50 +3044,6 @@ $("[data-copy]").addEventListener("click", async () => {
   try { await navigator.clipboard.writeText($("[data-d-sha]").textContent); btn.textContent = "Copied"; }
   catch (err) { btn.textContent = "Select it"; }
   setTimeout(() => { btn.textContent = "Copy"; }, 1800);
-});
-
-/* a small zip writer (stored, no compression) for the starter programs */
-function crc32(buf) { let crc = 0xFFFFFFFF; for (let n = 0; n < buf.length; n++) { let c = (crc ^ buf[n]) & 0xFF; for (let k = 0; k < 8; k++) c = c & 1 ? (c >>> 1) ^ 0xEDB88320 : c >>> 1; crc = (crc >>> 8) ^ c; } return (crc ^ 0xFFFFFFFF) >>> 0; }
-function makeZip(files) {
-  const enc = new TextEncoder(), parts = [], central = []; let offset = 0;
-  for (const f of files) {
-    const data = enc.encode(f.text), name = enc.encode(f.name), crc = crc32(data);
-    const lh = new DataView(new ArrayBuffer(30));
-    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
-    lh.setUint16(10, 0, true); lh.setUint16(12, 0x21, true); lh.setUint32(14, crc, true); lh.setUint32(18, data.length, true);
-    lh.setUint32(22, data.length, true); lh.setUint16(26, name.length, true); lh.setUint16(28, 0, true);
-    parts.push(new Uint8Array(lh.buffer), name, data);
-    const ch = new DataView(new ArrayBuffer(46));
-    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true);
-    ch.setUint16(10, 0, true); ch.setUint16(12, 0, true); ch.setUint16(14, 0x21, true); ch.setUint32(16, crc, true);
-    ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true); ch.setUint16(28, name.length, true);
-    ch.setUint16(30, 0, true); ch.setUint16(32, 0, true); ch.setUint16(34, 0, true); ch.setUint16(36, 0, true);
-    ch.setUint32(38, 0, true); ch.setUint32(42, offset, true);
-    central.push(new Uint8Array(ch.buffer), name);
-    offset += 30 + name.length + data.length;
-  }
-  const cdSize = central.reduce((s, a) => s + a.length, 0);
-  const end = new DataView(new ArrayBuffer(22));
-  end.setUint32(0, 0x06054b50, true); end.setUint16(4, 0, true); end.setUint16(6, 0, true); end.setUint16(8, files.length, true);
-  end.setUint16(10, files.length, true); end.setUint32(12, cdSize, true); end.setUint32(16, offset, true); end.setUint16(20, 0, true);
-  return new Blob([...parts, ...central, new Uint8Array(end.buffer)], { type: "application/zip" });
-}
-$("[data-save-starter]").addEventListener("click", async () => {
-  const msg = $("[data-d-saymsg]");
-  if (!previewSaver) { msg.textContent = "Saving isn't available in this view."; return; }
-  msg.textContent = "Waiting for you to confirm the save…";
-  try {
-    const files = STARTER.map(f => ({ name: "century-starter/" + f.name, text: f.text }));
-    const r = await previewSaver.save({ filename: "century-starter.zip", data: makeZip(files) });
-    msg.textContent = r.status === "saved" ? "Saved century-starter.zip." : "Sent.";
-  } catch (err) {
-    const code = err && err.code;
-    msg.textContent = code === "declined" ? "Not saved: the save was declined." :
-      code === "rate_limited" ? "A save is already waiting for an answer. Try again in a moment." :
-      code === "extension_not_enabled" ? "Zip files can't be saved in this view." :
-      "Saving isn't available in this view.";
-    if (code === "unavailable" || code === "not_granted" || code === "capability_disabled" || code === "capability_removed") $("[data-d-starter]").hidden = true;
-  }
 });
 
 /* ---------- start ---------- */
