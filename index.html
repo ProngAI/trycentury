@@ -461,7 +461,7 @@ end</pre>
 
 <!-- ============ INSTALL ============ -->
 <div data-view="install" hidden>
-<header class="page-head"><div class="wrap"><h1>Install Century</h1><p>There is no installer. Download one archive, unpack it, and run <code>century --device</code> to see what your machine can do. On Windows, three runtime DLLs from MinGW-w64 must be on the PATH first.</p></div></header>
+<header class="page-head"><div class="wrap"><h1>Install Century</h1><p>There is no installer. Download one archive, unpack it, and run <code>century --device</code> to see what your machine can do. On Windows, three runtime DLLs from MinGW-w64 must be on the PATH first. Century 1.0 is out for Windows; the Linux and macOS downloads are still the previous version, so some of what the manual describes (such as <code>print</code> and changeable strings) is not in them yet.</p></div></header>
 <section class="band" style="padding-top:0">
   <div class="wrap">
     <div class="mine">
@@ -508,7 +508,7 @@ end</pre>
     </nav>
     <div>
       <article class="lesson" id="t1"><span class="num">STEP 1</span><h2>Your first program</h2>
-        <p>A program is one or more <code>.cy</code> files. There is no required <code>main</code>: you name the function to run, and its parameters come from <code>--arg</code>. Century has no print statement, so a run shows the function's return value.</p>
+        <p>A program is one or more <code>.cy</code> files. There is no required <code>main</code>: you name the function to run, and its parameters come from <code>--arg</code>. A run shows the function's return value, and <code>print(v)</code> writes a line to standard output.</p>
 <pre class="cy">-- hello.cy: the sum of the squares 1..n
 pub fn main(n: u32) -> u64
     mut total = u64(0)
@@ -547,7 +547,7 @@ d = a + b               -- refused</pre>
         <a class="more" data-sec="4.7" href="#docs">Manual: Operators →</a></article>
 
       <article class="lesson" id="t4"><span class="num">STEP 4</span><h2><code>mut</code> and the assignment rule</h2>
-        <p><code>mut name = e</code> always declares a fresh binding. <code>name = e</code> declares an immutable one when the name is new, and assigns when it names an existing <code>mut</code> binding. Bindings take no type annotation: convert the value instead.</p>
+        <p><code>mut name = e</code> always declares a fresh binding. <code>name = e</code> declares an immutable one when the name is new, and assigns when it names an existing <code>mut</code> binding. A binding can also name its type: <code>mut x: u32 = 0</code>.</p>
 <pre class="cy">mut x = 5          -- declares a NEW mutable binding
 y = 10             -- y is not in scope: declares a NEW immutable binding
 x = x + 1          -- x is in scope and mutable: assigns to it
@@ -840,6 +840,9 @@ hello.exe 10
 
 prints `385`. Section 2.5 has the details.
 
+To show more than the return value, call `print(v)`: it writes `v` and a line
+to standard output (section 4.27). `input()` reads a line from standard input.
+
 In **cmd**, `century` works from the folder that holds `century.exe`. In
 **PowerShell**, type `.\century` instead, or add the folder to your `PATH` to
 use it from anywhere.
@@ -856,9 +859,8 @@ Before anything else on a new machine, run `century --device` (section 3).
   the function to run with `--jit` or `--ir-run`.
 - That function takes integer or `bool` parameters, whose values come from
   `--arg`, and returns a number, a `bool`, or nothing.
-- **Century has no print statement.** A run shows the function's return value.
-  Anything more goes to a file with `writefile` (section 4.23), or out through an
-  operating-system call (section 4.22).
+- **A run shows the function's return value.** Anything more is written with
+  `print` (section 4.27), or to a file with `writefile` (section 4.23).
 
 ### 2.2 The main commands
 
@@ -869,7 +871,7 @@ Before anything else on a new machine, run `century --device` (section 3).
 | `century prog.cy --build prog.exe` | Compiles the program once into a standalone executable, which you then run as `prog.exe 5` (section 2.5). |
 | `century prog.cy --ir-run f --arg 5` | Runs `f(5)` on the interpreter. Much slower, but every array access is checked. For debugging. |
 | `century --device` | Reports this machine's CPU and GPU and what Century will do with them (section 3). |
-| `century --help` / `century --version` | Usage summary / build date. |
+| `century --help` / `century --version` | Usage summary / version, build date and commit. |
 
 Every flag is listed in section 8.
 
@@ -1042,9 +1044,9 @@ interpreter checks every access and names the failure, for example
 | `i8 i16 i32 i64` | Signed integers, two's complement. Arithmetic wraps around. |
 | `f32 f64` | IEEE floats. |
 | `bool` | `true` or `false`. |
-| `string` | A text constant (section 4.10). |
+| `string` | Text that cannot change once made (section 4.10). |
 | `T[]` | A dynamic array of `T` (section 4.9). |
-| `T[N]` | A fixed-length array. Accepted as a type but cannot be created yet: use `T[]`. |
+| `T[N]` | A fixed array: `N` elements, the length part of the type (section 4.9). |
 | `(A, B, ...)` | A tuple of two or more values (section 4.11). |
 | `map[K, V]` | A hash map (section 4.12). |
 | `fn(A, B -> R)` | A function value. `fn(A)` returns nothing. |
@@ -1090,9 +1092,13 @@ y = 3              -- error: y is immutable
   same scope is an error.
 - `name = e` declares an immutable binding when `name` is new, and assigns when
   `name` is an existing `mut` binding.
-- A binding's type comes from its first value and never changes. **There are
-  no type annotations on bindings** (`mut x: u32 = 0` does not parse). Use a
-  conversion instead: `mut x = u32(0)`.
+- A binding's type comes from its first value and never changes. A type may be
+  written after the name: `mut x: u32 = 0`, `y: u64 = 1`. It sets the type of
+  a literal, so `mut x: u32 = 0` is `mut x = u32(0)`, and any other value must
+  already have that type: `mut x: u32 = u64(5)` is an error
+  (`binding: expected u32, found u64`). Structs and arrays work the same way:
+  `mut a: u32[] = array[u32](4)`, `p: Vec2 = Vec2(x: 1.0, y: 2.0)`. A binding
+  written with a type is always new; it never assigns to an existing one.
 - Every binding must be given a value when declared.
 
 ### 4.5 Functions
@@ -1133,23 +1139,39 @@ else
     ...
 end
 
--- there is no `else if`: nest an `if` inside `else`, with its own `end`
+-- `else if` continues the chain; one `end` closes the whole chain
 if x > u32(10) then
     r = u32(1)
+else if x > u32(5) then
+    r = u32(2)
 else
-    if x > u32(5) then
-        r = u32(2)
-    else
-        r = u32(3)
-    end
+    r = u32(3)
 end
 
 while i < n do
     i = i + u32(1)
 end
 
-for x in arr do          -- arrays only; x is each element in turn
+for x in arr do          -- x is each element of the array in turn
     s = s + x
+end
+
+for i in a..b do         -- i is a, a + 1, ... b - 1; b is not included
+    s = s + i
+end
+
+for k, v in m do         -- k is each key of the map m, smallest first; v is m[k]
+    s = s + v
+end
+
+while true do
+    i = i + u32(1)
+    if i % u32(2) == u32(0) then
+        continue         -- next round of the innermost loop
+    end
+    if i > n then
+        break            -- leave the innermost loop
+    end
 end
 
 return
@@ -1157,10 +1179,38 @@ return e
 ```
 
 - Conditions must be exactly `bool`. Numbers are not truthy.
-- `for` walks an **array** only. It has no ranges and no maps. For a counting
-  loop, use `while` with a counter.
-- **There is no `break` or `continue`.** Put the exit in the `while` condition:
-  `while i < n and not found do`.
+- `for x in arr` walks an **array**. `for i in a..b` counts `i` from `a` up
+  to `b - 1`, and runs zero times when `b <= a`. `a` and `b` are whole
+  numbers of one type (`u8` to `u64`, `i8` to `i64`); a literal takes the type
+  of the other end. `i` cannot be assigned to. `b` is read once, before the
+  first pass, so changing the variable it came from inside the body does not
+  change the count. For a step other than 1, or a count down, use `while`.
+- `for k, v in m` walks a **map**: `k` is each key in ascending order and `v`
+  is `m[k]`; `for k in m` gives the keys alone. Neither can be assigned to.
+  The keys are taken when the loop starts, so a key added in the loop is not
+  visited, while a value changed in the loop is seen when its key comes up.
+  Section 4.12 has the order of each key type.
+- A range loop is the same loop as `mut i = a` followed by
+  `while i < b do ... i = i + 1 end`, and the loop passes treat it that way: it
+  vectorises, fuses with a neighbour over the same bounds, and runs in
+  parallel as the `while` does. `b` stays a plain name or literal in that loop
+  when it is a literal or a binding without `mut`; any other `b` (`len(a)`,
+  `n * 2`, a `mut` variable) is kept in a hidden variable, which does not stop
+  vectorising but stops fusing two such loops. Bind it first: `n = len(a)`.
+- The `..` of a range loop leaves `b` out. The `..` of a parameter range,
+  `n: u32 in 0..1000` (section 4.5), includes both ends.
+- **`else if` must start on the line of its `else`.** An `if` on the next line
+  after `else` is still an `if` nested in the else block, and needs its own
+  `end`: `else if x then ... end end` on one line is a chain followed by a
+  stray `end`, which is an error.
+- `break` and `continue` work in `while` and `for` and act on the innermost
+  loop. They stand alone on their line, and are an error outside a loop. A
+  loop that uses them is compiled to ordinary code with a flag, which the
+  optimiser treats like any loop; in a `for` over an array, the rest of the
+  array is still walked, doing nothing. They are refused inside `gpu do`,
+  `cpu do` and `async` blocks, even inside a loop within the block: put the exit
+  in the loop's condition there. `break` and `continue` remain usable as
+  variable names.
 - When `for` walks an array of structs, assigning a field of the loop variable
   (`p.x = p.x + p.vx`) writes into the array itself.
 - Only a call can stand alone as a statement (also `push` and `store`). A
@@ -1194,7 +1244,7 @@ From loosest to tightest:
 - Integer `/` and `%` truncate toward zero: `-7 % 4` is `-3`. **Division or
   remainder by zero gives 0** and does not crash.
 - `not` binds tighter than `==`, so write `not (a == b)`, or simply `a != b`.
-- Strings support `==` and `!=` only.
+- `+` also joins two strings, and `<` `<=` `>` `>=` order them byte by byte (section 4.10).
 
 ### 4.8 Conversions
 
@@ -1209,8 +1259,9 @@ Write the target type as a function: `f64(x)`, `u32(y)`, `i8(z)`.
 | `bool` → integer | `1` or `0`: `u32(a > b)`. Useful for counting without branching. |
 | Vector → vector | Lane by lane, keeping the lane count: `f32(v)` turns `simd[i32, 8]` into `simd[f32, 8]`. |
 
-There is no conversion to `bool` or to `string`. Bit-level reinterpretation is
-`tobits` and `frombits` (section 5).
+There is no conversion to `bool`. `string(x)` makes a string from a string, a
+`u8[]` or a number (section 4.10). Bit-level reinterpretation is `tobits` and
+`frombits` (section 5).
 
 ### 4.9 Arrays
 
@@ -1241,23 +1292,70 @@ g[i, j] = 1.0
   The compiler chooses the memory layout and may store each field as its own
   array when that reads less memory. `--layout` shows what it decided.
 
+**Fixed arrays.** In `T[N]` the length is part of the type:
+
+```
+mut v = f64[3](0.0)            -- three elements, each 0.0
+w = [1, 2, 3]                  -- i32[3]
+c = [u8(255), 0, 128]          -- u8[3]: the first typed element sets the type
+v[0] = 1.5
+k = len(v)                     -- 3, a constant
+```
+
+- `T[N](v)` makes `N` copies of `v`, and `[a, b, c]` an array of its elements
+  in order. `N` is an integer literal, 1 or more. The elements are numbers,
+  `bool` or `simd` vectors.
+- Bare literals in `[...]` take the type of the first element that has one,
+  else `i32` or `f64`, as for a binding: `[1, 2]` is an `i32[2]`.
+- A fixed array is an array: indexing, `for`, `cpu do` and `gpu do` work as for
+  `T[]`, and `--ir-run` checks every access. **It is shared, not copied**, by
+  `b = a` and by a call.
+- A literal index past the end is a compile error. `push` is refused: a fixed
+  array cannot grow.
+- A `T[N]` can go wherever a `T[]` of the same element type is expected, and
+  still shares its elements. The other way round is refused, since the length
+  of a `T[]` is not known until the program runs.
+- Functions take and return fixed arrays by reference, like any array:
+  `fn norm(v: f64[3]) -> f64`. A caller must pass exactly that length.
+
 ### 4.10 Strings
 
-Strings are **constants**: text written in the source, used as names, map keys,
-file paths and arguments to operating-system calls.
+A string is text that cannot change once made. A program builds new strings
+from old ones at run time.
 
 ```
 name = "alice"
-if name == "alice" then ... end
+mut greeting = "hello, " + name    -- joins two strings
+n = len(greeting)                  -- 12, the length in bytes, u32
+c = greeting[u32(0)]               -- 104, the byte at an index, u8
+if name == "alice" then ... end    -- == and != compare the text
+if "apple" < "banana" then ... end -- < <= > >= order byte by byte
+raw = bytes(greeting)              -- the bytes, as a new u8[]
+back = string(raw)                 -- a string from a u8[] of bytes
+label = string(u32(42)) + "/" + string(2.5)   -- "42/2.5"
 mut ages = map[string, u32]()
 ages["alice"] = u32(30)
-data = readfile("input.bin")
-raw = bytes("GET ")            -- the bytes of a string literal, as u8[]
 ```
 
-Strings cannot be built, joined, sliced or indexed at run time. For text work,
-use `u8[]` arrays of bytes: `bytes("...")` gives the bytes of a literal, and
-`writefile` writes bytes out.
+- A string can be a `mut` binding, a parameter, a result, a struct field, a
+  map key and a map value. Passing one never copies its text.
+- `string(x)` makes a string from a string, a `u8[]` of bytes or a number.
+  Integers are written in decimal. Floats get at most six decimals, with the
+  zeros at the end dropped but one kept: `string(2.5)` is `"2.5"` and
+  `string(1.0)` is `"1.0"`.
+- `bytes(s)` gives a new array, so changing it does not change `s`. For a
+  literal written in place, `bytes("...")` still gives the bytes emitted with
+  the program.
+- An index is an integer, and the bytes are numbered from 0. `--ir-run`
+  checks it; native code does not, as with arrays.
+- **A string made at run time lives until the program ends.** Equal strings
+  share one copy, so making the same text twice costs nothing more, but every
+  distinct string a loop makes stays in memory (section 7).
+- Inside a `cpu do` block, strings can be compared with `==` and `!=` only:
+  making a string there is refused with its own message, and the other
+  operations reach the table of strings, so the block is refused as one that
+  cannot run wide. A `gpu do` block cannot use strings at all.
+- Strings are UTF-8 bytes to `len` and indexing: `len("é")` is 2.
 
 ### 4.11 Tuples
 
@@ -1282,11 +1380,39 @@ m["one"] = u32(1)
 m["one"] = m["one"] + u32(5)
 x = m["missing"]               -- a missing key reads as 0 and is not added
 k = len(m)                     -- number of entries, u32
+for k, v in m do               -- every key once, smallest first, and v = m[k]
+    t = t + v
+end
+for k in m do                  -- the keys alone
+    c = c + u32(1)
+end
 ```
 
 - Keys must be a number, `bool` or `string`.
 - Values must be a number, `bool` or `string` in native code (section 7).
-- Maps cannot be iterated, and keys cannot be removed.
+- Keys cannot be removed.
+- **The order of `for`.** Whole-number keys come in the order of their type,
+  signed or unsigned (`i32(-5)` before `i32(3)`; `u64(1) << 63` after `u64(5)`).
+  `false` comes before `true`. String keys come in the order in which each
+  string first appears in the program's text, because the compiler numbers a
+  string when it first reads it (a name spelled the same counts too): a file
+  that writes `m["pear"]` and then `m["apple"]` walks pear, then apple. It is
+  not alphabetical. Maps with `f32` or `f64` keys cannot be walked.
+- **The keys are taken once.** When the loop starts it copies the keys and
+  sorts them, which costs time in proportion to n log n and memory for n
+  keys. Each pass then reads `m[k]` afresh, so a value changed earlier in the
+  loop is seen when its key comes up. A key added inside the loop is not
+  visited. `break` and `continue` work as in any loop.
+- `--ir-run`, `--jit` and built programs walk a map in the same order.
+- How it is done: a file that walks a map gets Century source added to it, as
+  with `print` (section 4.27): functions whose names start with `cy_m`, and an
+  `extern` declaration of `RtlMoveMemory` from `kernel32.dll`, through which it
+  reads the native map's list of entries. Do not define those names yourself.
+  The source is added when the file has a `for k, v in` loop, or a
+  `for k in m do` whose `m` is a name the file declares as a map (`m = map[`,
+  `m: map[`). Any other `for k in` over a map, such as `for k in s.m` or
+  `for k in make()`, is refused with a message: write `for k, v in` there.
+  Files without such loops build exactly as before.
 
 ### 4.13 Structs
 
@@ -1312,6 +1438,9 @@ s = v.x + v.y
   contents of an array held in a field: `g.cells[1] = ...` needs `mut cells: u32[]`.
 - Structs are values: `d = c` copies, and a function gets a copy.
 - Structs can nest (`b.pos.x`), and a struct can hold arrays, tuples and maps.
+- A field can be a fixed array, `mut coef: f64[4]`, given as
+  `Poly(coef: [1.0, 2.0, 0.0, 0.0])` or `Poly(coef: f64[4](0.0))`. Like any
+  array field it holds a reference, so a copy of the struct shares the elements.
 - `volatile` on a field (`volatile status: u32`) means every read and write is
   a real memory access that is never cached, merged or reordered. It is for
   memory-mapped hardware registers. A volatile field must be a single scalar,
@@ -1845,7 +1974,7 @@ How Century types reach C:
 - Arrays shared with `gpu do` blocks stay consistent: an array the GPU wrote
   is fetched before the call, and anything the DLL wrote reaches the GPU next time.
 - `extern` runs in native code: `--jit` and built programs (section 2.5). The
-  interpreter (`--ir-run`) cannot call into DLLs and stops with a message
+  interpreter (`--ir-run`) cannot call into DLLs (except for what `print`, `input` and `eof` use) and stops with a message
   saying so. That includes a CPU too old for native code (section 3), where
   `--jit` itself falls back to the interpreter.
 - A built program looks each `extern` function up again when it starts, by
@@ -1983,6 +2112,68 @@ end
 
 ---
 
+### 4.27 Printing and typing: `print`, `input`, `eof`
+
+```
+print(42)                      -- 42
+print(0.1 + 0.2)               -- 0.30000000000000004
+print(a > b)                   -- true
+print("hello")                 -- hello
+print(bytes("raw"))            -- raw
+line = input()                 -- u8[]: the next line of standard input
+if eof() then
+    print("no more input")
+end
+```
+
+- `print(v)` writes `v` and a line feed (`\n`, never `\r\n`) to standard output.
+  `v` is any integer type, any float type, a `bool`, a string, or a `u8[]`,
+  which is written as its raw bytes, so a `u8[]` of UTF-8 text prints as text.
+  Any other type is refused: the message is "`print` writes an integer, a float,
+  a bool, a string or a u8[], found u32[]".
+- **Integers** are written in decimal, with a `-` for a negative one.
+  **A `bool`** is `true` or `false`.
+- **Floats** are written with the fewest digits that read back as exactly the
+  same value, for an `f32` as an `f32` (`f32(0.1)` is `0.1`, not
+  `0.10000000149011612`). From `0.00001` up to but not including `1e16` the
+  number is written in full and always has a point: `1.0`, `0.5`, `123456.789`,
+  `1000000000000000.0`. Outside that range it is the digits, a point if there
+  are two or more, `e` and the exponent: `1e16`, `1.5e-7`, `5e-324`. The rest
+  are `nan`, `inf`, `-inf` and `-0.0`.
+- `input()` reads standard input up to the next line feed and returns the line
+  as a `u8[]`, without the line ending: both `\n` and `\r\n` end a line, and a
+  `\r` that is not followed by `\n` stays in the line. The last line may have
+  no line ending. It reads one byte at a time, so a megabyte of input costs
+  a million operating-system calls: for big inputs, have the data in a file
+  and use `readfile`.
+- **At the end of input**, `input()` returns an empty array and `eof()` is
+  true. `eof()` is true after an `input()` that found no byte at all, and
+  false before the first `input()`. A blank line also gives an empty array,
+  but then `eof()` is false. The usual loop:
+
+  ```
+  line = input()
+  while not eof() do
+      print(line)
+      line = input()
+  end
+  ```
+- It works the same on `--ir-run`, `--jit` and in a built program, whether
+  standard input and output are a terminal, a pipe or a file. Each `print` is
+  one call to the operating system, so the output is not lost if the program
+  stops, and what a program prints comes before the result line of `--jit` and
+  `--ir-run`.
+- **Not in parallel blocks.** Printing and reading happen in an order, so
+  `print`, `input` and `eof` are refused inside a `gpu do` block, and a
+  `cpu do` block that calls them is refused like one that calls an `extern`
+  function (section 4.21). Print before or after the block.
+- `print`, `input` and `eof` are not reserved: a program that defines its own
+  function, or variable, with one of those names keeps using it.
+- How it is done: when a file calls one of them, the compiler adds Century
+  source to that file, which formats the value and calls `GetStdHandle`, `WriteFile` and `ReadFile`
+  (section 4.22). `eof()` is kept in an environment variable named `CY_EOF`
+  that `input()` sets.
+
 ## 5. Built-in functions
 
 A local binding or function with the same name hides a built-in.
@@ -1991,12 +2182,16 @@ A local binding or function with the same name hides a built-in.
 
 | Built-in | Result | Meaning |
 |---|---|---|
-| `len(a)` | `u32` | Elements in an array, or entries in a map. |
+| `len(a)` | `u32` | Elements in an array, entries in a map, or bytes in a string. For a `T[N]`, the constant `N`. |
 | `push(a, v)` | statement | Appends `v` to the dynamic array `a`. |
 | `store(a, i, v)` | statement | Writes the vector `v` over `a[i]` .. `a[i+N-1]`. |
 | `readfile(path)` | `u8[]` | The whole file, or an empty array if it cannot be opened. |
 | `writefile(path, data)` | `u32` | Writes a `u8[]` and returns the bytes written. |
-| `bytes("text")` | `u8[]` | The bytes of a string literal, which must be written in place. |
+| `print(v)` | statement | Writes `v` and a line feed to standard output. `v` is an integer, a float, a `bool`, a string or a `u8[]` (section 4.27). |
+| `input()` | `u8[]` | Reads one line of standard input, without its `\n` or `\r\n`. An empty array at the end of input. |
+| `eof()` | `bool` | True after an `input()` that found the end of input. |
+| `bytes(s)` | `u8[]` | The bytes of a string, as a new array. For a literal written in place, the bytes emitted with the program. |
+| `string(x)` | `string` | A string from a string, a `u8[]` of bytes, or a number written in decimal (section 4.10). |
 | `atomic_add(a, i, v)` | `u32` | Adds `v` to `a[i]` indivisibly and returns the old value. `a` is a `u32[]`. Safe inside `cpu` and `gpu` blocks, which run wide with it - also beside ordinary stores to other arrays (a `lock xadd` on the CPU). |
 | `clock()` | `f64` | Seconds since the program started (section 4.24). |
 
@@ -2056,7 +2251,7 @@ compiler can make as fast as the machine allows, and how to prove it.
 ### 6.1 Measure first, and measure properly
 
 - **Time from inside with `clock()`** (section 4.24), around exactly the code
-  you care about. 
+  you care about.
 - **Warm up, then take the best of several runs.** The first run of anything
   pays one-off costs: the operating system handing over fresh memory pages,
   threads starting, the GPU waking from a low-power state. Run the code once
@@ -2362,12 +2557,10 @@ rather than gets wrong.
 
 | Limit | Do this instead |
 |---|---|
-| No `print`, and no keyboard input | Return a value, `writefile` bytes, or call the operating system through `extern`. |
-| No `break`, `continue` or `else if` | Use a condition on the `while`, or nest `if` inside `else`. |
-| No type annotations on bindings | `mut x = u32(0)`. |
-| `for` walks arrays only | Count with `while`. Maps cannot be iterated. |
-| Strings are constants | Work on `u8[]` bytes. `readfile` and `writefile` take a `u8[]` path. |
-| `T[N]` fixed arrays cannot be created | Use `T[]` from `array[T](n)`. |
+| `print` writes one line per call and `input` reads one byte at a time | Build a big output in a `u8[]` and print it once. Read a large input with `readfile` on a file. |
+| `for` walks arrays, ranges `a..b` and maps only, and a map only in ascending key order; maps with float keys not at all | For any other step, count with `while`. For another order, copy the keys into an array and sort it. |
+| A string made at run time is never freed, and each distinct one stays in memory until the program ends: a loop that makes millions of different strings uses memory for all of them | Build text in a `u8[]` and make one string at the end with `string(b)`. |
+| `T[N]` fixed arrays are held by reference, like `T[]`, not stored inside a struct, and cannot be made of arrays or structs | For a grid, a 2-D array (`array[T](r, c)`); for structs, `array[T](n)`. |
 | In native code, arrays cannot hold strings, arrays, tuples, function values or sum types. The program is refused with a `cannot build IR: ...` message. | Use a struct with the parts as fields, a 2-D array (`array[T](r, c)`), or numeric codes instead of strings. |
 | In native code, a struct nested inside an array element (`ps[i].pos.x`) cannot be reached, and a whole element cannot be read or assigned as one value (`ps[i] = P(...)`). | Keep array element structs flat and assign field by field: `ps[i].x = ...`. |
 | In native code, map values must be numbers, `bool` or strings. | Keep a map from key to index, plus arrays of the fields. |
@@ -2455,7 +2648,7 @@ overflow obligations: 4 total, 3 proved, 1 UNPROVED
 |---|---|
 | `century --device` | The device scan (section 3). |
 | `century --help` or `-h` | The usage summary. |
-| `century --version` | The build date. |
+| `century --version` | The version, the date it was built and the commit it was built from, for example `century 1.0 (built 2026-11-11 from 5406204, windows-x64)`. A compiler built without the build script prints `dev build` where the date and commit go. |
 | `century --test <dir>` | Type-check every `.cy` file in a directory. Each must pass, except files named `bad_*.cy`, which must be rejected. Prints one line per file and exits with 1 if any file did otherwise. |
 
 ### Specialist tools
@@ -2516,7 +2709,10 @@ there are none. A refused `cpu do` or `gpu do` block is reported after the
 | `` this `match` does not handle Empty `` | Add the missing `case`. There is no default case. |
 | `a type name on its own is not a value` | A type name such as `i8` or `u32` was used as a variable. Rename the variable. |
 | `` unknown name `xFF` `` | There are no hex literals. Write `255`. |
-| `` expected `=` after a `mut` binding `` | Bindings take no type annotation: `mut x = u32(0)`. |
+| `` expected `=` after a `mut` binding `` | Write `mut x = e`, or give the type after the name: `mut x: u32 = e`. |
+| `` binding: expected u32, found u64 `` | The value does not have the type written after the name. Convert it: `u32(v)`. |
+| `` `break` is only valid inside a `while` or `for` loop `` | `break` and `continue` leave or repeat the innermost loop, so they need one. |
+| `` `break` cannot be used inside a `gpu do`, `cpu do` or `async` block `` | Put the exit in the condition of the loop instead. |
 | `` this `cpu` block cannot be run wide: ... `` / `` this `gpu` block cannot be run wide: ... `` | The loop's iterations depend on each other. Each iteration must write only its own elements, or use `atomic_add`. The message says which access is the problem. |
 | `` ... cannot be run wide: the body does something whose order cannot be reasoned about `` | The block calls an `extern` function, uses `push`, a map, a file or `clock()`. Move that out of the block. |
 | `` ... cannot be run wide: it carries a value from one iteration to the next `` | A variable declared outside the block is assigned inside it. Declare it inside, or write one result per iteration into an array and total them afterwards. |
@@ -2677,7 +2873,7 @@ prints its `ok` line and the machine code size first; they are left out here.
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
 <script>
-const DOWNLOADS = {"windows": {"file": "century-windows-x64.zip", "size": 2828566, "sha256": "2e9a329f29b258703c07104c99740b2e2b8536c185d4d236166c2f1a3059a108"}, "macos": {"file": "century-macos-x64.tar.gz", "size": 2674476, "sha256": "c325755088b5f8f808d0707d733ab41e104d939f66388439d168b90ee24406a2"}, "linux": {"file": "century-linux-x64.tar.gz", "size": 3356493, "sha256": "2ad84294cbfdfd35028ebbc5015627038f10721428c368f3c991a4bcdf93e378"}, "built": "10 Nov 2026"};
+const DOWNLOADS = {"windows": {"file": "century-windows-x64.zip", "size": 2925705, "sha256": "b8cdb1976928be13d31a62c3a9e176d0028003a06fe17631c320c64c0694f974"}, "macos": {"file": "century-macos-x64.tar.gz", "size": 2674476, "sha256": "c325755088b5f8f808d0707d733ab41e104d939f66388439d168b90ee24406a2"}, "linux": {"file": "century-linux-x64.tar.gz", "size": 3356493, "sha256": "2ad84294cbfdfd35028ebbc5015627038f10721428c368f3c991a4bcdf93e378"}, "built": "10 Nov 2026"};
 const STARTER = [{"name": "hello.cy", "text": "-- hello.cy: the sum of the squares 1..n\npub fn main(n: u32) -> u64\n    mut total = u64(0)\n    mut i = u32(1)\n    while i <= n do\n        total = total + u64(i * i)\n        i = i + u32(1)\n    end\n    return total\nend\n"}, {"name": "heavy.cy", "text": "-- heavy.cy: a loop that runs on every CPU thread\n-- try:  century heavy.cy --jit heavy --arg 4000000\n-- then: CY_THREADS=1 century heavy.cy --jit heavy --arg 4000000 --jit-time\npub fn heavy(n: u32) -> f64\n    mut a = array[f64](n)\n    cpu do\n        mut i = u32(0)\n        while i < n do\n            mut x = f64(i) * 0.000001\n            mut k = u32(0)\n            while k < u32(64) do\n                x = sqrt(x * x + 1.0)\n                k = k + u32(1)\n            end\n            a[i] = x\n            i = i + u32(1)\n        end\n    end\n    return a[n / u32(2)] + a[n - u32(1)]\nend\n"}, {"name": "sumsq.cy", "text": "-- sumsq.cy: a floating-point sum with an error budget\n-- try:  century sumsq.cy --jit sumsq --arg 1000000\npub fn sumsq(n: u32) -> f64\n    mut a = array[f64](n)\n    mut i = u32(0)\n    while i < n do\n        a[i] = f64(i) * 0.001\n        i = i + u32(1)\n    end\n    mut acc ~ 1e-6 = 0.0\n    mut j = u32(0)\n    while j < len(a) do\n        acc = acc + a[j] * a[j]\n        j = j + u32(1)\n    end\n    return acc\nend\n"}, {"name": "README.md", "text": "# Century starter programs\n\nPut these next to the `century` program you downloaded, then:\n\n    century hello.cy --jit main --arg 10        # 385\n    century heavy.cy --jit heavy --arg 4000000  # every CPU thread\n    century sumsq.cy --jit sumsq --arg 1000000  # a sum with an error budget\n\nOn macOS and Linux, type ./century instead of century.\n"}];
 
 const OS_INFO = {
