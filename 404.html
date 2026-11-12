@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Page not found · Century</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<script>
+  // trycentury.org/install, /docs and so on are sections of the one page: send them there
+  (function () {
+    var p = location.pathname.replace(/\/+$/, "").replace(/^\/+/, "").toLowerCase();
+    var known = { "": "home", "home": "home", "install": "install", "download": "install", "downloads": "install",
+                  "learn": "learn", "tour": "learn", "docs": "docs", "manual": "docs", "benchmarks": "benchmarks",
+                  "built": "built" };
+    if (known.hasOwnProperty(p)) location.replace("/#" + known[p]);
+  })();
+</script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body { background: #14213d; color: #f2f4f8; font-family: "Source Sans 3", -apple-system, "Segoe UI", sans-serif;
+         display: flex; flex-direction: column; }
+  header { padding: 18px 0; border-bottom: 1px solid rgba(255,255,255,.08); }
+  .wrap { width: min(1100px, 100% - 48px); margin: 0 auto; }
+  .brand { display: inline-flex; align-items: center; gap: 10px; color: #f2f4f8; text-decoration: none;
+           font-family: "Zilla Slab", Georgia, serif; font-weight: 700; font-size: 22px; }
+  main { flex: 1; display: flex; align-items: center; }
+  .box { padding: 64px 0 80px; }
+  .code { font-family: "JetBrains Mono", Menlo, monospace; color: #c49a2c; font-size: 15px; letter-spacing: .5px; }
+  h1 { font-family: "Zilla Slab", Georgia, serif; font-size: clamp(40px, 7vw, 64px); line-height: 1.05; margin: 14px 0 14px; }
+  p { color: #b7c0d4; font-size: 19px; max-width: 46ch; line-height: 1.5; }
+  .term { margin-top: 28px; background: #0b1224; border: 1px solid rgba(255,255,255,.08); border-radius: 10px;
+          padding: 16px 18px; font-family: "JetBrains Mono", Menlo, monospace; font-size: 14px; color: #d6dbe6;
+          max-width: 560px; line-height: 1.6; }
+  .term .err { color: #ef8b80; }
+  .term .dim { color: #7d879c; }
+  .ctas { margin-top: 30px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn { display: inline-block; padding: 11px 18px; border-radius: 8px; font-weight: 700; font-size: 16px; text-decoration: none; }
+  .primary { background: #c49a2c; color: #14213d; }
+  .plain { border: 1px solid rgba(255,255,255,.25); color: #f2f4f8; }
+  .btn:hover { filter: brightness(1.08); }
+  footer { padding: 18px 0; color: #7d879c; font-size: 14px; border-top: 1px solid rgba(255,255,255,.08); }
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <a class="brand" href="/"><svg width="30" height="30" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="42" fill="none" stroke="#c49a2c" stroke-width="10" pathLength="100" stroke-dasharray="0.42 0.58"/><text x="50" y="62" text-anchor="middle" font-family="Zilla Slab, Georgia, serif" font-weight="700" font-size="40" fill="#fff">cy</text></svg>Century</a>
+</div></header>
+<main><div class="wrap box">
+  <div class="code">404</div>
+  <h1>This page doesn't exist.</h1>
+  <p>The link may be old, or the address has a typo. Everything on the site starts from the home page.</p>
+  <div class="term"><span class="dim">$</span> century <span id="path">this-page</span>.cy<br><span class="err">cannot read <span id="path2">this-page</span>.cy</span></div>
+  <div class="ctas">
+    <a class="btn primary" href="/">Go to the home page</a>
+    <a class="btn plain" href="/#install">Install</a>
+    <a class="btn plain" href="/#docs">The manual</a>
+  </div>
+</div></main>
+<footer><div class="wrap">trycentury.org</div></footer>
+<script>
+  (function () {
+    var name = location.pathname.replace(/^\/+|\/+$/g, "").split("/").pop() || "this-page";
+    name = name.replace(/\.[A-Za-z0-9]+$/, "").replace(/[^A-Za-z0-9._-]/g, "").slice(0, 40) || "this-page";
+    document.getElementById("path").textContent = name;
+    document.getElementById("path2").textContent = name;
+  })();
+</script>
+</body>
+</html>
