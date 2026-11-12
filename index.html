@@ -66,6 +66,7 @@ h3 { font-size: 23px; font-weight: 600; }
 .page-head { background: var(--hero-bg); color: var(--hero-tx); padding: 48px 0 44px; }
 .page-head h1 { color: #fff; font-size: 54px; }
 .page-head p { color: var(--hero-muted); max-width: 64ch; margin-top: 8px; font-size: 19px; }
+[data-view="install"] .page-head { padding-bottom: 116px; }
 [data-view][hidden] { display: none !important; }
 
 /* nav */
@@ -461,7 +462,7 @@ end</pre>
 
 <!-- ============ INSTALL ============ -->
 <div data-view="install" hidden>
-<header class="page-head"><div class="wrap"><h1>Install Century</h1><p>Download one archive, unpack it, and run <code>century --device</code> to see what your machine can do. On Windows, the three runtime DLLs it needs come in the archive, next to <code>century.exe</code>, and <code>install.cmd</code> puts Century on your PATH. Century 1.0 is out for Windows; the Linux and macOS downloads are still the previous version, so some of what the manual describes (such as <code>print</code> and changeable strings) is not in them yet.</p></div></header>
+<header class="page-head"><div class="wrap"><h1>Install Century</h1><p>Download one archive, unpack it, and run <code>century --device</code> to see what your machine can do. On Windows, the three runtime DLLs it needs come in the archive, next to <code>century.exe</code>, and <code>install.cmd</code> puts Century on your PATH. Century 1.0 is out for Windows and macOS; the Linux download is still the previous version, so some of what the manual describes (such as <code>print</code> and changeable strings) is not in it yet.</p></div></header>
 <section class="band" style="padding-top:0">
   <div class="wrap">
     <div class="mine">
@@ -734,7 +735,7 @@ end</pre>
       <div><h4>Project</h4><ul><li><a href="#benchmarks">Benchmarks</a></li><li><a href="#built">Built with Century</a></li></ul></div>
       <div><h4>Downloads</h4><ul><li><a href="#install">Windows</a></li><li><a href="#install">macOS</a></li><li><a href="#install">Linux</a></li></ul></div>
     </div>
-    <p class="small">trycentury.org · compiler builds of 10 Nov 2026</p>
+    <p class="small">trycentury.org · Century 1.0 for Windows and macOS</p>
   </div>
 </footer>
 
@@ -2877,7 +2878,7 @@ prints its `ok` line and the machine code size first; they are left out here.
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
 <script>
-const DOWNLOADS = {"windows": {"file": "century-windows-x64.zip", "size": 4199546, "sha256": "0bbff465e1a070b408f08eca738f9fe3234668abacad1e449f4b8abe426a2433"}, "macos": {"file": "century-macos-x64.tar.gz", "size": 2674476, "sha256": "c325755088b5f8f808d0707d733ab41e104d939f66388439d168b90ee24406a2"}, "linux": {"file": "century-linux-x64.tar.gz", "size": 3356493, "sha256": "2ad84294cbfdfd35028ebbc5015627038f10721428c368f3c991a4bcdf93e378"}, "built": "10 Nov 2026"};
+const DOWNLOADS = {"windows": {"file": "century-windows-x64.zip", "size": 4199546, "sha256": "0bbff465e1a070b408f08eca738f9fe3234668abacad1e449f4b8abe426a2433", "built": "11 Nov 2026"}, "macos": {"file": "century-macos-x64.tar.gz", "size": 2728477, "sha256": "cf7e0344fb4a628250a50926309f76b88a57ec2b6ecf33d5653465397235c0c5", "built": "12 Nov 2026"}, "linux": {"file": "century-linux-x64.tar.gz", "size": 3356493, "sha256": "2ad84294cbfdfd35028ebbc5015627038f10721428c368f3c991a4bcdf93e378"}, "built": "10 Nov 2026"};
 const STARTER = [{"name": "hello.cy", "text": "-- hello.cy: the sum of the squares 1..n\npub fn main(n: u32) -> u64\n    mut total = u64(0)\n    mut i = u32(1)\n    while i <= n do\n        total = total + u64(i * i)\n        i = i + u32(1)\n    end\n    return total\nend\n"}, {"name": "heavy.cy", "text": "-- heavy.cy: a loop that runs on every CPU thread\n-- try:  century heavy.cy --jit heavy --arg 4000000\n-- then: CY_THREADS=1 century heavy.cy --jit heavy --arg 4000000 --jit-time\npub fn heavy(n: u32) -> f64\n    mut a = array[f64](n)\n    cpu do\n        mut i = u32(0)\n        while i < n do\n            mut x = f64(i) * 0.000001\n            mut k = u32(0)\n            while k < u32(64) do\n                x = sqrt(x * x + 1.0)\n                k = k + u32(1)\n            end\n            a[i] = x\n            i = i + u32(1)\n        end\n    end\n    return a[n / u32(2)] + a[n - u32(1)]\nend\n"}, {"name": "sumsq.cy", "text": "-- sumsq.cy: a floating-point sum with an error budget\n-- try:  century sumsq.cy --jit sumsq --arg 1000000\npub fn sumsq(n: u32) -> f64\n    mut a = array[f64](n)\n    mut i = u32(0)\n    while i < n do\n        a[i] = f64(i) * 0.001\n        i = i + u32(1)\n    end\n    mut acc ~ 1e-6 = 0.0\n    mut j = u32(0)\n    while j < len(a) do\n        acc = acc + a[j] * a[j]\n        j = j + u32(1)\n    end\n    return acc\nend\n"}, {"name": "README.md", "text": "# Century starter programs\n\nPut these next to the `century` program you downloaded, then:\n\n    century hello.cy --jit main --arg 10        # 385\n    century heavy.cy --jit heavy --arg 4000000  # every CPU thread\n    century sumsq.cy --jit sumsq --arg 1000000  # a sum with an error budget\n\nOn macOS and Linux, type ./century instead of century.\n"}];
 
 const OS_INFO = {
@@ -2891,7 +2892,7 @@ const OS_INFO = {
     name: "macOS", title: "macOS",
     reqs: ["Intel Macs natively; Apple silicon (M1 to M4) through Rosetta 2", "macOS offers to install Rosetta the first time an x86-64 program starts", "If macOS blocks the download, allow it in System Settings, Privacy & Security"],
     steps: "$ cd ~/Downloads\n$ tar xzf century-macos-x64.tar.gz\n$ cd century-macos-x64\n$ ./century --device\n$ ./century hello.cy --jit main --arg 10\njit main = 385",
-    anywhere: "$ mkdir -p ~/.local/bin\n$ cp century ~/.local/bin/\n$ echo 'export PATH=\"$HOME/.local/bin:$PATH\"' >> ~/.zshrc\n$ source ~/.zshrc\n$ century --version"
+    anywhere: "In the unpacked folder:\n$ ./install.sh\nIt copies century to ~/.local/bin and adds that folder to your PATH.\nThen, in a new terminal:\n$ century --version\n./uninstall.sh removes it again."
   },
   linux: {
     name: "Linux", title: "Linux",
@@ -2991,7 +2992,7 @@ window.addEventListener("hashchange", route);
 function renderInstall() {
   const mine = DOWNLOADS[MY_OS], info = OS_INFO[MY_OS];
   $("[data-mine-title]").textContent = "Century for " + info.name;
-  $("[data-mine-meta]").innerHTML = esc(mine.file) + " · " + fmtSize(mine.size) + " · built " + esc(DOWNLOADS.built) + "<br>SHA-256 <code>" + esc(mine.sha256.slice(0, 16)) + "…</code>";
+  $("[data-mine-meta]").innerHTML = esc(mine.file) + " · " + fmtSize(mine.size) + " · built " + esc(mine.built || DOWNLOADS.built) + "<br>SHA-256 <code>" + esc(mine.sha256.slice(0, 16)) + "…</code>";
   $("[data-mine-steps]").textContent = info.steps; colourTerm($("[data-mine-steps]"));
   const order = [MY_OS, ...["windows", "macos", "linux"].filter(o => o !== MY_OS)];
   $("[data-oses]").innerHTML = order.map(os => {
@@ -3029,7 +3030,7 @@ function openDownload(os) {
   dlgOS = os || MY_OS;
   const d = DOWNLOADS[dlgOS], info = OS_INFO[dlgOS];
   $("[data-d-file]").textContent = d.file;
-  $("[data-d-meta]").textContent = fmtSize(d.size) + " · Century for " + info.name + " · built " + DOWNLOADS.built;
+  $("[data-d-meta]").textContent = fmtSize(d.size) + " · Century for " + info.name + " · built " + (d.built || DOWNLOADS.built);
   $("[data-d-sha]").textContent = d.sha256;
   $("[data-d-steps]").textContent = info.steps; colourTerm($("[data-d-steps]"));
   $("[data-d-saymsg]").textContent = "";
