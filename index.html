@@ -465,7 +465,7 @@ end</pre>
 
 <!-- ============ INSTALL ============ -->
 <div data-view="install" hidden>
-<header class="page-head"><div class="wrap"><h1>Install Century</h1><p>Download one archive, unpack it, and run <code>century --device</code> to see what your machine can do. On Windows, the three runtime DLLs it needs come in the archive, next to <code>century.exe</code>, and <code>install.cmd</code> puts Century on your PATH. Century 1.0 is out for Windows and macOS; the Linux download is still the previous version, so some of what the manual describes (such as <code>print</code> and changeable strings) is not in it yet.</p></div></header>
+<header class="page-head"><div class="wrap"><h1>Install Century</h1><p>Download one archive, unpack it, and run <code>century --device</code> to see what your machine can do. On Windows, the three runtime DLLs it needs come in the archive, next to <code>century.exe</code>, and <code>install.cmd</code> puts Century on your PATH. Century 1.0.1 is out for Windows and macOS. It fixes two bugs: a running min or max of 64-bit integers no longer fails to compile, and a <code>gpu</code> block that uses <code>ctz</code>, <code>clz</code> or <code>popcount</code> on 64-bit integers now runs on the GPU instead of the CPU. The Linux download is still the previous version, so some of what the manual describes (such as <code>print</code> and changeable strings) is not in it yet.</p></div></header>
 <section class="band" style="padding-top:0">
   <div class="wrap">
     <div class="mine">
@@ -738,7 +738,7 @@ end</pre>
       <div><h4>Project</h4><ul><li><a href="#benchmarks">Benchmarks</a></li><li><a href="#built">Built with Century</a></li></ul></div>
       <div><h4>Downloads</h4><ul><li><a href="#install">Windows</a></li><li><a href="#install">macOS</a></li><li><a href="#install">Linux</a></li></ul></div>
     </div>
-    <p class="small">trycentury.org · Century 1.0 for Windows and macOS</p>
+    <p class="small">trycentury.org · Century 1.0.1 for Windows and macOS</p>
   </div>
 </footer>
 
@@ -2876,7 +2876,7 @@ prints its `ok` line and the machine code size first; they are left out here.
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
 <script>
-const DOWNLOADS = {"windows": {"file": "century-windows-x64.zip", "size": 4199546, "sha256": "0bbff465e1a070b408f08eca738f9fe3234668abacad1e449f4b8abe426a2433", "built": "11 Nov 2026"}, "macos": {"file": "century-macos-x64.tar.gz", "size": 2728477, "sha256": "cf7e0344fb4a628250a50926309f76b88a57ec2b6ecf33d5653465397235c0c5", "built": "12 Nov 2026"}, "linux": {"file": "century-linux-x64.tar.gz", "size": 3356493, "sha256": "2ad84294cbfdfd35028ebbc5015627038f10721428c368f3c991a4bcdf93e378"}, "built": "10 Nov 2026"};
+const DOWNLOADS = {"windows": {"file": "century-windows-x64.zip", "size": 4109577, "sha256": "02338e6bc7d8efe742bf511be338f4e5561f458e35c2d17a93732fe1d70ccc61", "built": "13 Nov 2026"}, "macos": {"file": "century-macos-x64.tar.gz", "size": 2728602, "sha256": "0ba36ec93a53b7e0b5e9f274c1e61d04e7217c2ecd02a75f1f345cf91e21350f", "built": "13 Nov 2026"}, "linux": {"file": "century-linux-x64.tar.gz", "size": 3356493, "sha256": "2ad84294cbfdfd35028ebbc5015627038f10721428c368f3c991a4bcdf93e378"}, "built": "10 Nov 2026"};
 
 const OS_INFO = {
   windows: {
